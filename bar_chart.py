@@ -1,16 +1,28 @@
+#import packages
+import dash
+#for Dash HTML component
+from dash import html
+#for Dash core components
+from dash import dcc
+from dash import Input, Output
+#for bootstrap
+import dash_bootstrap_components as dbc
 import pandas as pd
-import plotly_express as px
-'''#Bar graph
+import plotly.express as px
+
+#to use bootstrap stylesheet
+external_stylesheets =[dbc.themes.BOOTSTRAP]
+#Bar graph
 #read the data
 df=pd.read_csv('data/Caste.csv')
 #take data related to Maharashtra
 maharastra_data=df[df.state_name=='Maharashtra']
 maharastra_stat=maharastra_data.groupby(['year','gender'])[['convicts','under_trial','detenues','others']].agg('sum').reset_index()
-print (maharastra_stat.shape)
+#Create the bar plot
 bar=px.bar(data_frame=maharastra_data,x='gender',y='convicts',\
            color='gender',\
            opacity=0.9,
-           #facet_col='caste',
+           title='Maharastra Prison Statistics',
            orientation='v',              # 'v','h': orientation of the marks
            barmode='group',
            text='convicts',            # values appear in figure as text labels
@@ -22,10 +34,10 @@ bar=px.bar(data_frame=maharastra_data,x='gender',y='convicts',\
 bar.layout.updatemenus[0].buttons[0].args[1]['frame']['duration'] = 1000
 # controls the speed of y axis
 bar.layout.updatemenus[0].buttons[0].args[1]['transition']['duration'] = 500
-bar.show()
+
 #Scatter plot
 tips_data= px.data.tips()
-print (tips_data.info())
+#Draw scatterplot
 scatterplot = px.scatter(
     data_frame=tips_data,
     x="total_bill",
@@ -35,8 +47,9 @@ scatterplot = px.scatter(
     facet_row='sex',
     facet_col='time',
     facet_col_wrap=2,
+    title='Tips Analysis'
 )
-scatterplot.show()'''
+
 #Draw racing bar
 #load suicide data
 suicide_data= pd.read_csv('data/suicide-rate-1990-2017.csv')
@@ -48,7 +61,6 @@ eu_data=suicide_data[suicide_data['region']=='Europe']
 eu_stat_df=eu_data.groupby('country')['suicide rate (deaths per 100,000)'].agg(['mean']).sort_values('mean',ascending=False).reset_index()
 #get the mean suicide rate of eu
 mean_sr=eu_stat_df['mean'].mean()
-print (f"mean suicide rate of EU:{mean_sr}")
 #get countries with suicide rate more than or equal to mean suicide rate
 top_eu_stat=eu_stat_df[eu_stat_df['mean'] >= mean_sr]
 #select the countries who has suicide rate more that the mean suicide rate
@@ -57,8 +69,8 @@ top_eu_data = eu_data[eu_data['country'].isin(top_eu_stat['country'].values.toli
 suicide_bar=px.bar(data_frame=top_eu_data,y='country',x='suicide rate (deaths per 100,000)',\
            barmode='group',
            orientation='h',
-		   title='suicide rate (deaths per 100,000) in Europe', # figure title
-           width=1200,                   # figure width in pixels
+		   title='Suicide rate in Europe', # figure title
+           width=1100,                   # figure width in pixels
            height=650,                   # figure height in pixels
            animation_frame='year',
 		   range_x=[0,100],
@@ -68,4 +80,104 @@ suicide_bar=px.bar(data_frame=top_eu_data,y='country',x='suicide rate (deaths pe
 #controls animation speed
 suicide_bar.layout.updatemenus[0].buttons[0].args[1]['frame']['duration'] = 1000
 suicide_bar.layout.updatemenus[0].buttons[0].args[1]['transition']['duration'] = 500
-suicide_bar.show()
+#Graph for bees
+#load data
+bees_data= pd.read_csv('data/bees.csv')
+print(bees_data.info())
+app = dash.Dash(__name__,external_stylesheets=external_stylesheets)
+#
+# App layout
+app.layout = html.Div([
+    #row 1 for Maharastra bar graph
+    html.Div([
+        html.Div([
+        ],className='col-md-2'),#row 1 col 1 ends
+        html.Div([
+            #card
+            html.Div([
+                #card-body
+			    html.Div([
+                    dcc.Graph(id='maharastra_bar',figure=bar)
+				],className='card-body')#card-body ends
+		    ],className='card')
+        ],className='col-md-8'),#row 1 col 2 ends
+        html.Div([
+        ],className='col-md-2')#row 1 col 3 ends
+    ],className='row'),#row 1 (Maharastra bar graph)ends
+    # row 2 for tips scatter plot
+    html.Div([
+        html.Div([
+            #card
+            html.Div([
+                #card-body
+		        html.Div([
+                    dcc.Graph(id='tips_scatter',figure=scatterplot)
+			    ],className='card-body')#card-body ends
+		    ],className='card')#card ends
+        ],className='col-md-12')
+    ], className='row'),# row 2 (tips scatter plot)ends
+    # row 3 for EU racing bar plot
+    html.Div([
+        html.Div([
+            #card
+            html.Div([
+                #card-body
+		        html.Div([
+                    dcc.Graph(id='EU_RB',figure=suicide_bar)
+			    ],className='card-body')#card-body ends
+		    ],className='card')#card ends
+        ],className='col-md-12')
+    ], className='row'),# row 3 (EU racing bar plot)ends
+    # row 4 for bees plot
+    html.Div([
+        html.Div([
+            html.Label(['Select Year:']),
+            #Drop down
+            dcc.Dropdown(id="year_selected",
+                 options=[
+                     {"label": "2015", "value": 2015},
+                     {"label": "2016", "value": 2016},
+                     {"label": "2017", "value": 2017},
+                     {"label": "2018", "value": 2018}],
+                 multi=False,
+                 value=2015,
+                 style={'width': "40%"}
+            ),
+            html.Br(),
+            html.Div(id='output_container', children=[]),
+            dcc.Graph(id='bees_graph')
+        ],className='col-md-12')
+    ], className='row'),# row 4 (bess graph)ends
+],className='container')
+
+# ------------------------------------------------------------------------------
+# Connect the Plotly graphs with Dash Components
+#call back functions
+@app.callback([Output(component_id='output_container',component_property='children'),
+                     Output(component_id='bees_graph',component_property='figure')],
+	                Input(component_id='year_selected',component_property='value'))
+def draw_bees(year):
+    #make msg for the container
+    container = "The year chosen by user is: {}".format(year)
+    #make local copy of dataframe
+    df=bees_data.copy()
+    #filter tha data for selected year
+    df=df[df['Year']== year]
+    #filder data for only one virus
+    df = df[df["Affected by"] == "Varroa_mites"]
+    # draw plotly express figure
+    fig = px.choropleth(
+        data_frame=df,
+        locationmode='USA-states',
+        locations='state_code',
+        scope="usa",
+        color='Pct of Colonies Impacted',
+        hover_data=['State', 'Pct of Colonies Impacted'],
+        color_continuous_scale=px.colors.sequential.YlOrRd,
+        labels={'Pct of Colonies Impacted': '% of Bee Colonies'},
+        template='plotly_dark'
+    )
+    return container,fig
+
+if __name__ == '__main__':
+    app.run_server(debug=True)
