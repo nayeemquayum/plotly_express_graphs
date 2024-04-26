@@ -11,7 +11,7 @@ import pandas as pd
 import plotly.express as px
 
 #to use bootstrap stylesheet
-external_stylesheets =[dbc.themes.BOOTSTRAP]
+external_stylesheets =[dbc.themes.SUPERHERO]
 #Bar graph
 #read the data
 df=pd.read_csv('data/Caste.csv')
@@ -70,7 +70,7 @@ suicide_bar=px.bar(data_frame=top_eu_data,y='country',x='suicide rate (deaths pe
            barmode='group',
            orientation='h',
 		   title='Suicide rate in Europe', # figure title
-           width=1100,                   # figure width in pixels
+           width=1000,                   # figure width in pixels
            height=650,                   # figure height in pixels
            animation_frame='year',
 		   range_x=[0,100],
@@ -84,71 +84,130 @@ suicide_bar.layout.updatemenus[0].buttons[0].args[1]['transition']['duration'] =
 #load data
 bees_data= pd.read_csv('data/bees.csv')
 print(bees_data.info())
-app = dash.Dash(__name__,external_stylesheets=external_stylesheets)
+
+app = dash.Dash(__name__,
+                external_stylesheets=external_stylesheets,
+                meta_tags=[{'name': 'viewport',
+                            'content': 'width=device-width, initial-scale=1.0'}])
+
+# bootstrap
+app.layout=dbc.Container([
+            dbc.Row(
+                dbc.Col(html.H4("Indian Prison Analysis",className='text-center mb-10'),
+                xs=12, sm=12, md=12, lg=12, xl=12),align="center"
+            ),#Row 1 ends
+            dbc.Row(
+                dbc.Col(dcc.Graph(id='maharastra_bar',figure=bar),className="col-md-6 offset-md-3")
+                ,align="center"
+            ),#row 2 ends
+            dbc.Row(
+                dbc.Col(html.H4("Tips Analysis",className='text-center mb-10'),
+                xs=12, sm=12, md=12, lg=12, xl=12),align="center"
+            ),#Row 3 ends
+            dbc.Row(
+                dbc.Col(dcc.Graph(id='tips_scatter',figure=scatterplot),className="col-md-8 offset-md-2")
+                ,align="center"
+            ),#row 4 ends
+            dbc.Row(
+                dbc.Col(html.H4("Suicide Rate Analysis In Europe",className='text-center mb-10'),
+                xs=12, sm=12, md=12, lg=12, xl=12),align="center"
+            ),#Row 5 ends
+            dbc.Row(
+                dbc.Col(dcc.Graph(id='EU_RB',figure=suicide_bar),className="col-md-8 offset-md-1"),align="center"
+            ),#row 6 ends
+            dbc.Row(
+                dbc.Col(html.H4("Bees Analysis In USA",className='text-center mb-10'),
+                xs=12, sm=12, md=12, lg=12, xl=12),align="center"
+            ),#Row 7 ends
+			dbc.Row([
+                dbc.Col([
+                    html.Label("Select Year:",style={'display':'flex','textAlign':'center'},className='text-center mb-12'),
+                    #html.Header("Select Year:",style={'textAlign':'center'}),
+                    #Drop down
+                    dcc.Dropdown(id="year_selected",
+                        options=[
+                            {"label": "2015", "value": 2015},
+                            {"label": "2016", "value": 2016},
+                            {"label": "2017", "value": 2017},
+                            {"label": "2018", "value": 2018}],
+                        multi=False,
+                        value=2015,
+                        style={'width': "40%",
+                               'justify-content': 'center'
+                               }
+                    ),
+                    html.Br(),
+                    html.Div(id='output_container', children=[]),
+                    dcc.Graph(id='bees_graph')
+                ],
+                align="center",xs=12, sm=12, md=12, lg=12, xl=12)#column for row 8 ends
+
+            ],align="center")#row 8 ends
+], fluid=True)#app.layout ends
 #
 # App layout
-app.layout = html.Div([
-    #row 1 for Maharastra bar graph
-    html.Div([
-        html.Div([
-        ],className='col-md-2'),#row 1 col 1 ends
-        html.Div([
-            #card
-            html.Div([
-                #card-body
-			    html.Div([
-                    dcc.Graph(id='maharastra_bar',figure=bar)
-				],className='card-body')#card-body ends
-		    ],className='card')
-        ],className='col-md-8'),#row 1 col 2 ends
-        html.Div([
-        ],className='col-md-2')#row 1 col 3 ends
-    ],className='row'),#row 1 (Maharastra bar graph)ends
-    # row 2 for tips scatter plot
-    html.Div([
-        html.Div([
-            #card
-            html.Div([
-                #card-body
-		        html.Div([
-                    dcc.Graph(id='tips_scatter',figure=scatterplot)
-			    ],className='card-body')#card-body ends
-		    ],className='card')#card ends
-        ],className='col-md-12')
-    ], className='row'),# row 2 (tips scatter plot)ends
-    # row 3 for EU racing bar plot
-    html.Div([
-        html.Div([
-            #card
-            html.Div([
-                #card-body
-		        html.Div([
-                    dcc.Graph(id='EU_RB',figure=suicide_bar)
-			    ],className='card-body')#card-body ends
-		    ],className='card')#card ends
-        ],className='col-md-12')
-    ], className='row'),# row 3 (EU racing bar plot)ends
-    # row 4 for bees plot
-    html.Div([
-        html.Div([
-            html.Label(['Select Year:']),
-            #Drop down
-            dcc.Dropdown(id="year_selected",
-                 options=[
-                     {"label": "2015", "value": 2015},
-                     {"label": "2016", "value": 2016},
-                     {"label": "2017", "value": 2017},
-                     {"label": "2018", "value": 2018}],
-                 multi=False,
-                 value=2015,
-                 style={'width': "40%"}
-            ),
-            html.Br(),
-            html.Div(id='output_container', children=[]),
-            dcc.Graph(id='bees_graph')
-        ],className='col-md-12')
-    ], className='row'),# row 4 (bess graph)ends
-],className='container')
+# app.layout = html.Div([
+#     #row 1 for Maharastra bar graph
+#     html.Div([
+#         html.Div([
+#         ],className='col-md-2'),#row 1 col 1 ends
+#         html.Div([
+#             #card
+#             html.Div([
+#                 #card-body
+# 			    html.Div([
+#                     dcc.Graph(id='maharastra_bar',figure=bar)
+# 				],className='card-body')#card-body ends
+# 		    ],className='card')
+#         ],className='col-md-8'),#row 1 col 2 ends
+#         html.Div([
+#         ],className='col-md-2')#row 1 col 3 ends
+#     ],className='row'),#row 1 (Maharastra bar graph)ends
+#     # row 2 for tips scatter plot
+#     html.Div([
+#         html.Div([
+#             #card
+#             html.Div([
+#                 #card-body
+# 		        html.Div([
+#                     dcc.Graph(id='tips_scatter',figure=scatterplot)
+# 			    ],className='card-body')#card-body ends
+# 		    ],className='card')#card ends
+#         ],className='col-md-12')
+#     ], className='row'),# row 2 (tips scatter plot)ends
+#     # row 3 for EU racing bar plot
+#     html.Div([
+#         html.Div([
+#             #card
+#             html.Div([
+#                 #card-body
+# 		        html.Div([
+#                     dcc.Graph(id='EU_RB',figure=suicide_bar)
+# 			    ],className='card-body')#card-body ends
+# 		    ],className='card')#card ends
+#         ],className='col-md-12')
+#     ], className='row'),# row 3 (EU racing bar plot)ends
+#     # row 4 for bees plot
+#     html.Div([
+#         html.Div([
+#             html.Label(['Select Year:']),
+#             #Drop down
+#             dcc.Dropdown(id="year_selected",
+#                  options=[
+#                      {"label": "2015", "value": 2015},
+#                      {"label": "2016", "value": 2016},
+#                      {"label": "2017", "value": 2017},
+#                      {"label": "2018", "value": 2018}],
+#                  multi=False,
+#                  value=2015,
+#                  style={'width': "40%"}
+#             ),
+#             html.Br(),
+#             html.Div(id='output_container', children=[]),
+#             dcc.Graph(id='bees_graph')
+#         ],className='col-md-12')
+#     ], className='row'),# row 4 (bess graph)ends
+# ],className='container')
 
 # ------------------------------------------------------------------------------
 # Connect the Plotly graphs with Dash Components
